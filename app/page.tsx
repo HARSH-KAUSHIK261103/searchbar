@@ -1,12 +1,20 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import axios from "axios";
+
+interface Product {
+  id: string;
+  image: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+}
 
 export default function Home() {
   const [query, setQuery] = useState("");
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Product[]>([]);
   const [category, setCategory] = useState("");
 
   useEffect(() => {
@@ -16,18 +24,19 @@ export default function Home() {
         if (query) params.append("q", query);
         if (category) params.append("category", category);
 
-        const res = await axios.get(`/api/products?${params.toString()}`);
+        const res = await axios.get<Product[]>(
+          `/api/products?${params.toString()}`
+        );
         setData(res.data);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
 
-    // Fetch data only if query length is 0 or greater than 1
     if (query.length === 0 || query.length > 1) fetchData();
   }, [query, category]);
 
-  const handleCategoryClick = (cat) => {
+  const handleCategoryClick = (cat: string) => {
     setCategory(cat === "All" ? "" : cat);
   };
 
@@ -53,6 +62,7 @@ export default function Home() {
         onChange={(e) => setQuery(e.target.value.toLowerCase())}
       />
       <h6 className="filter-label">Filter by Category:</h6>
+
       <div className="category-buttons">
         {categories.map((cat, index) => (
           <button
@@ -66,12 +76,15 @@ export default function Home() {
           </button>
         ))}
       </div>
+
       <div className="product-cards">
         {data.map((product) => (
           <div key={product.id} className="product-card">
-            <img
-              src={product.image}
+            <Image
+              src="/images.png"
               alt={product.name}
+              width={300} // Adjust this as needed
+              height={300}
               className="product-image"
             />
             <h3 className="product-name">{product.name}</h3>
