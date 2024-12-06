@@ -1,101 +1,86 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import axios from "axios";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [query, setQuery] = useState("");
+  const [data, setData] = useState([]);
+  const [category, setCategory] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (query) params.append("q", query);
+        if (category) params.append("category", category);
+
+        const res = await axios.get(`/api/products?${params.toString()}`);
+        setData(res.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+
+    // Fetch data only if query length is 0 or greater than 1
+    if (query.length === 0 || query.length > 1) fetchData();
+  }, [query, category]);
+
+  const handleCategoryClick = (cat) => {
+    setCategory(cat === "All" ? "" : cat);
+  };
+
+  const categories = [
+    "All",
+    "Electronics",
+    "Furniture",
+    "Home Appliances",
+    "Accessories",
+    "Footwear",
+    "Fitness",
+    "Books",
+    "Clothing",
+    "Kitchen",
+  ];
+
+  return (
+    <div className="app">
+      <h1 className="heading">MySearch</h1>
+      <input
+        className="search-bar"
+        placeholder="Search for product names..."
+        onChange={(e) => setQuery(e.target.value.toLowerCase())}
+      />
+      <h6 className="filter-label">Filter by Category:</h6>
+      <div className="category-buttons">
+        {categories.map((cat, index) => (
+          <button
+            key={index}
+            className={`category-button ${
+              category === cat || (cat === "All" && !category) ? "active" : ""
+            }`}
+            onClick={() => handleCategoryClick(cat)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            {cat}
+          </button>
+        ))}
+      </div>
+      <div className="product-cards">
+        {data.map((product) => (
+          <div key={product.id} className="product-card">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="product-image"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <h3 className="product-name">{product.name}</h3>
+            <p className="product-category">{product.category}</p>
+            <p className="product-description">{product.description}</p>
+            <p className="product-price">${product.price}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
